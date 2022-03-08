@@ -23,20 +23,21 @@ public class SMTPConnection {
     /* Create an SMTPConnection object. Create the socket and the 
        associated streams. Initialize SMTP connection. */
     public SMTPConnection(Envelope envelope) throws IOException {
-        connection = ;
+        connection = new Socket(envelope.DestAddr, SMTP_PORT);
         fromServer = new BufferedReader(new InputStreamReader(System.in));
         toServer = new DataOutputStream(System.out);
 
-        /* Fill in */
 	    /* Read a line from server and check that the reply code is 220.
 	    If not, throw an IOException. */
-        /* Fill in */
+        String response = fromServer.readLine();
+        if(220 != parseReply(response)) {
+            throw new IOException("Error with connection");
+        }
 
 	    /* SMTP handshake. We need the name of the local machine.
 	   Send the appropriate SMTP handshake command. */
-
-        String localhost = /* Fill in */;
-        sendCommand( /* Fill in */ );
+        String localhost = "localhost";
+        sendCommand("HELO", 250);
 
         isConnected = true;
     }
@@ -49,6 +50,10 @@ public class SMTPConnection {
 	/* Send all the necessary commands to send a message. Call
 	   sendCommand() to do the dirty work. Do _not_ catch the
 	   exception thrown from sendCommand(). */
+        sendCommand("MAIL FROM:<" + envelope.Sender + ">", 250);
+        sendCommand("RCPT TO:<" + envelope.Recipient + ">", 250);
+        sendCommand("DATA", 354);
+        sendCommand(envelope.Message.toString() + CRLF + ".", 250);
         /* Fill in */
     }
 
@@ -57,8 +62,8 @@ public class SMTPConnection {
     public void close() {
         isConnected = false;
         try {
-            sendCommand( /* Fill in */ );
-            // connection.close();
+            sendCommand("QUIT", 221);
+            connection.close();
         } catch (IOException e) {
             System.out.println("Unable to close connection: " + e);
             isConnected = true;
