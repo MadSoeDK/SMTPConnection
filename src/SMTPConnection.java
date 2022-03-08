@@ -68,14 +68,17 @@ public class SMTPConnection {
     /* Send an SMTP command to the server. Check that the reply code is
        what is is supposed to be according to RFC 821. */
     private void sendCommand(String command, int rc) throws IOException {
-        /* Fill in */
         /* Write command to server and read reply from server. */
-        /* Fill in */
+        DataOutputStream output = new DataOutputStream(System.out);
+        output.writeBytes(command);
 
-        /* Fill in */
-	/* Check that the server's reply code is the same as the parameter
+	    /* Check that the server's reply code is the same as the parameter
 	   rc. If not, throw an IOException. */
-        /* Fill in */
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String response = br.readLine();
+        if(rc != parseReply(response)) {
+            throw new IOException();
+        }
     }
 
     /* Parse the reply line from the server. Returns the reply code. */
