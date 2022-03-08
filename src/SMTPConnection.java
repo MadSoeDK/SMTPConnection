@@ -23,17 +23,18 @@ public class SMTPConnection {
     /* Create an SMTPConnection object. Create the socket and the 
        associated streams. Initialize SMTP connection. */
     public SMTPConnection(Envelope envelope) throws IOException {
-        // connection = /* Fill in */;
-        fromServer = /* Fill in */;
-        toServer =   /* Fill in */;
+        connection = ;
+        fromServer = new BufferedReader(new InputStreamReader(System.in));
+        toServer = new DataOutputStream(System.out);
 
         /* Fill in */
-	/* Read a line from server and check that the reply code is 220.
-	   If not, throw an IOException. */
+	    /* Read a line from server and check that the reply code is 220.
+	    If not, throw an IOException. */
         /* Fill in */
 
-	/* SMTP handshake. We need the name of the local machine.
+	    /* SMTP handshake. We need the name of the local machine.
 	   Send the appropriate SMTP handshake command. */
+
         String localhost = /* Fill in */;
         sendCommand( /* Fill in */ );
 
@@ -79,7 +80,10 @@ public class SMTPConnection {
 
     /* Parse the reply line from the server. Returns the reply code. */
     private int parseReply(String reply) {
-        /* Fill in */
+        StringTokenizer st = new StringTokenizer(reply);
+        String replyArray = st.nextToken(" ");
+
+        return Integer.parseInt(replyArray);
     }
 
     /* Destructor. Closes the connection if something bad happens. */
