@@ -12,40 +12,38 @@ mailserver = 'smtp.gmail.com'
 
 # Create socket called clientSocket and establish a TCP connection with mailserver
 clientSocket = socket(AF_INET, SOCK_STREAM)
-SSL = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-wrappedSocket = SSL.wrap_socket(clientSocket)
 
-wrappedSocket.connect((mailserver, 465))
+clientSocket.connect((mailserver, 587))
+clientSocket.send('STARTTLS'.encode())
 
-recv = wrappedSocket.recv(2048)
-print(recv)
+SSL = ssl.create_default_context()
+wrappedSocket = SSL.wrap_socket(clientSocket, server_hostname=mailserver)
 
 def sendCommand(command, rc):
-    #print(command)
+    print(command)
     # Write command to server
-    wrappedSocket.send(base64.b64encode((command + CRLF).encode('utf-8')))
-
+    wrappedSocket.send((command + CRLF).encode())
 
     # Read the response
     response = wrappedSocket.recv(1024).decode('utf-8')
 
-    print(base64.b64decode(response))
+    print(response)
 
     if int(response[:3]) != rc or response[:3] == 'DAT':
         print(str(rc) + ' reply not received from server')
 
 
 # Send HELO command and print server response.
-heloCommand = 'EHLO localhost\n' # EHLO for extended SMTP
+heloCommand = 'EHLO' # EHLO for extended SMTP
 sendCommand(heloCommand, 250)
 
 login = 'AUTH LOGIN'
 sendCommand(login, 334)
 
-username = ''
+username = input("Input username")
 sendCommand(username, 334)
 
-psw = ''
+psw = input("Input password")
 sendCommand(psw, 235)
 
 # Send MAIL FROM command and print server response.
