@@ -36,16 +36,16 @@ def sendCommand(command, rc):
 
 
 # Send HELO command and print server response.
-heloCommand = 'EHLO localhost' # EHLO for extended SMTP
+heloCommand = 'EHLO localhost\n' # EHLO for extended SMTP
 sendCommand(heloCommand, 250)
 
 login = 'AUTH LOGIN'
 sendCommand(login, 334)
 
-username = 'c29lcmVuc2VubWFkczJAZ21haWwuY29t'
+username = ''
 sendCommand(username, 334)
 
-psw = 'TWFkczE1MDQh'
+psw = ''
 sendCommand(psw, 235)
 
 # Send MAIL FROM command and print server response.
