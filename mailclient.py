@@ -1,5 +1,6 @@
 from socket import *
-#msg = "\r\n I love computer networks!"
+
+# msg = "\r\n I love computer networks!"
 endmsg = "\r\n.\r\n"
 CRLF = "\r\n"
 header = "Subject: Test\nContent-Type: text/html;\n"
@@ -7,7 +8,11 @@ header = "Subject: Test\nContent-Type: text/html;\n"
 # Choose a mail server (e.g. Google mail server) and call it mailserver
 mailserver = 'localhost'
 
-# Create socket called clientSocket and establish a TCP connection with mailserver
+# AF_INET refers to the address-family ipv4.
+# The SOCK_STREAM means connection-oriented TCP protocol.
+# ----------------------------------------------------------
+# Create socket called clientSocket and
+# establish a TCP connection with mailserver
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((mailserver, 2525))
 
@@ -29,7 +34,7 @@ def sendCommand(command, rc):
 
 
 # Send HELO command and print server response.
-heloCommand = 'HELO localhost' # EHLO for extended SMTP
+heloCommand = 'HELO localhost'  # EHLO for extended SMTP
 sendCommand(heloCommand, 250)
 
 # Send MAIL FROM command and print server response.
@@ -51,7 +56,7 @@ sendCommand(data, 354)
 msg = input("Enter your message: ")
 
 clientSocket.send((header + (msg + CRLF) + endmsg).encode())
-#clientSocket.send(endmsg.encode())
+# clientSocket.send(endmsg.encode())
 
 resp = clientSocket.recv(1024).decode()
 print(resp)
