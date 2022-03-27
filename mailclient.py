@@ -2,7 +2,6 @@ import base64
 import ssl
 from socket import *
 
-# Choose a mail server (e.g. Google mail server) and call it mailserver
 bhsi_mailserver = 'smtp2.bhsi.xyz'
 bhsi_port = 2526
 
@@ -38,7 +37,7 @@ def createSocket(mailserver, port):
 
     return clientSocket
 
-
+# Sends an e-mail via Bhujips servers
 def send_mail(mailserver, port):
     msg = input("Message: ")
     msg = create_body(msg)
@@ -67,6 +66,7 @@ def send_mail(mailserver, port):
         clientsocket.recv(2048)
 
 
+# Sends an e-mail via Google servers
 def send_google_mail(mailserver, port, username, psw):
     msg = input("Message: ")
     msg = create_body(msg)
@@ -90,12 +90,12 @@ def send_google_mail(mailserver, port, username, psw):
 
     clientsocket = createSocket(mailserver, port)
 
-    # Prepare for tls
+    # Prepare for TLS
     for i in range(2):
         clientsocket.send(smtp_commands[i].encode())
         clientsocket.recv(2048)
 
-    # Upgrade connection to TLS
+    # TLS Connection
     ctx = ssl.create_default_context()
     clientsocket = ctx.wrap_socket(clientsocket, server_hostname=mailserver)
 
@@ -105,6 +105,7 @@ def send_google_mail(mailserver, port, username, psw):
         clientsocket.recv(2048)
 
 
+# Encapsulates the messages in headers
 def create_body(msg):
     body = f'Subject: E-mail\n' \
                f'Content-Type: text/plain; charset="UTF-8\n' \
