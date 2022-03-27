@@ -1,6 +1,7 @@
 import base64
 import ssl
 import os
+from getpass import getpass
 from socket import *
 
 bhsi_mailserver = 'smtp2.bhsi.xyz'
@@ -16,8 +17,8 @@ def main():
         if option == 'y':
             server = input("Gmail or Bhujip mailserver? (g/b): ")
             if server == "g":
-                username = input("Enter your Google username (base64): ")
-                psw = input("Enter your Google password (base64): ")
+                username = input("Enter your Google username: ")
+                psw = getpass("Enter your Google password (hidden): ")
                 send_google_mail(google_mailserver, google_port, username, psw)
                 print("Sending mail via smtp.gmail.com...")
             else:
@@ -52,7 +53,9 @@ def send_mail(mailserver, port):
     image_path = input("Image attachment (path): ")
 
     if image_path != '':
-        msg = msg + image_attachment(msg, image_path)
+        msg = msg + image_attachment(image_path)
+
+    msg += '--===============0814515963129319972==--\r\n'
 
     # SMTP protocol message
     smtp_commands = ["EHLO localhost\r\n",
@@ -75,13 +78,18 @@ def send_google_mail(mailserver, port, username, psw):
     sender = input("Mail from: ")
     receiver = input("Mail to: ")
 
+    username = base64_string_converter(username)
+    psw = base64_string_converter(psw)
+
     msg = input("Message: ")
     msg = create_body(msg, sender, receiver)
 
     image_path = input("Image attachment (path): ")
 
     if image_path != '':
-        msg = msg + image_attachment(msg, image_path)
+        msg = msg + image_attachment(image_path)
+
+    msg += '--===============0814515963129319972==--\r\n'
 
     # SMTP protocol message
     smtp_commands = ["EHLO localhost\r\n",
@@ -89,7 +97,7 @@ def send_google_mail(mailserver, port, username, psw):
                      "AUTH LOGIN\r\n",
                      username + "\r\n", psw + "\r\n",
                      f"MAIL FROM: <{sender}>\r\n",
-                     "RCPT TO: <{receiver}>\r\n",
+                     f"RCPT TO: <{receiver}>\r\n",
                      "DATA\r\n",
                      f"{msg}\r\n.\r\n",
                      "QUIT\r\n"]
@@ -112,19 +120,22 @@ def send_google_mail(mailserver, port, username, psw):
 
 
 # Encapsulates the messages in headers
+# 
+# "===============0814515963129319972==" is the name of the boundary,
+# it should be something the user never writes
 def create_body(msg, sender, receiver):
     body = f'Subject: E-mail\r\n' \
            f'MIME-Version: 1.0\r\n' \
            f'Content-Type: multipart/mixed; boundary="===============0814515963129319972=="\r\n' \
            f'From: {sender}\r\n' \
            f'To: {receiver}\r\n' \
+           f'\r\n' \
            f'--===============0814515963129319972==\r\n' \
            f'Content-Type: text/plain; charset="utf-8"\r\n' \
            f'Content-Transfer-Encoding: quoted-printable\r\n' \
            f'\r\n' \
            f'{msg}\r\n' \
-           f'\r\n' \
-           f'--===============0814515963129319972==\r\n'
+           f'\r\n'
 
     return body
 
@@ -145,17 +156,17 @@ def base_64_to_string(bytes_to_conv):
     return bytes_to_conv.decode('utf-8')
 
 
-def image_attachment(body, image_path):
+def image_attachment(image_path):
     image_base64 = base_64_to_string(image_to_base64(image_path))
 
     # Image attachment
     if image_path != '':
-        msg = body + 'Content-Transfer-Encoding: base64\r\n' \
-                     f'Content-Disposition: attachment; filename="{os.path.basename(image_path)}"\r\n' \
-                     '\r\n' \
-                     f'{image_base64}==\r\n' \
-                     '\r\n' \
-                     f'--===============0814515963129319972==\r\n'
+        msg = f'--===============0814515963129319972==\r\n' \
+              'Content-Transfer-Encoding: base64\r\n' \
+              f'Content-Disposition: attachment; filename="{os.path.basename(image_path)}"\r\n' \
+              '\r\n' \
+              f'{image_base64}==\r\n' \
+              '\r\n'
 
     return msg
 
