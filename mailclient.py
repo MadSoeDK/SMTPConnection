@@ -13,13 +13,15 @@ def main():
     while True:
         option = input("Send mail? (y/n): ")
         if option == 'y':
-            server = input("Gmail or Bhujip mailserver? (G/B): ")
-            if server == "G":
-                username = input("Enter your username (base64): ")
-                psw = input("Enter your password (base64): ")
+            server = input("Gmail or Bhujip mailserver? (g/b): ")
+            if server == "g":
+                username = input("Enter your Google username (base64): ")
+                psw = input("Enter your Google password (base64): ")
                 send_google_mail(google_mailserver, google_port, username, psw)
+                print("Sending mail via smtp.gmail.com...")
             else:
                 send_mail(bhsi_mailserver, bhsi_port)
+                print("Sending mail via smtp2.bhsi.xyz...")
         else:
             print("Quitting...")
             break
@@ -36,6 +38,7 @@ def createSocket(mailserver, port):
     clientSocket.recv(2048)
 
     return clientSocket
+
 
 # Sends an e-mail via Bhujips servers
 def send_mail(mailserver, port):
