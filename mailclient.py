@@ -1,5 +1,6 @@
 import base64
 import ssl
+import os
 from socket import *
 
 bhsi_mailserver = 'smtp2.bhsi.xyz'
@@ -35,15 +36,18 @@ def createSocket(mailserver, port):
     # establish a TCP connection with mailserver
     clientSocket = socket(AF_INET, SOCK_STREAM)
     clientSocket.connect((mailserver, port))
-    clientSocket.recv(2048)
+    print(clientSocket.recv(2048).decode())
 
     return clientSocket
 
 
 # Sends an e-mail via Bhujips servers
 def send_mail(mailserver, port):
+    sender = input("Mail from: ")
+    receiver = input("Mail to: ")
+
     msg = input("Message: ")
-    msg = create_body(msg)
+    msg = create_body(msg, sender, receiver)
 
     image_path = input("Image attachment (path): ")
 
@@ -52,11 +56,10 @@ def send_mail(mailserver, port):
 
     # SMTP protocol message
     smtp_commands = ["EHLO localhost\r\n",
-                     "MAIL FROM: <" + input("Mail from:") + ">\r\n",
-                     "RCPT TO: <" + input("Mail to: ") + ">\r\n",
+                     f"MAIL FROM: <{sender}>\r\n",
+                     f"RCPT TO: <{receiver}>\r\n",
                      "DATA\r\n",
-                     f"{msg}\r\n",
-                     ".\r\n",
+                     f"{msg}\r\n.\r\n",
                      "QUIT\r\n"]
 
     clientsocket = createSocket(mailserver, port)
@@ -64,15 +67,16 @@ def send_mail(mailserver, port):
     # Send commands
     for i in range(len(smtp_commands)):
         clientsocket.send(smtp_commands[i].encode())
-        if i == 4:
-            clientsocket.send(smtp_commands[i + 1].encode())
-        clientsocket.recv(2048)
+        print(clientsocket.recv(2048).decode())
 
 
 # Sends an e-mail via Google servers
 def send_google_mail(mailserver, port, username, psw):
+    sender = input("Mail from: ")
+    receiver = input("Mail to: ")
+
     msg = input("Message: ")
-    msg = create_body(msg)
+    msg = create_body(msg, sender, receiver)
 
     image_path = input("Image attachment (path): ")
 
@@ -84,11 +88,10 @@ def send_google_mail(mailserver, port, username, psw):
                      "STARTTLS\r\n",
                      "AUTH LOGIN\r\n",
                      username + "\r\n", psw + "\r\n",
-                     "MAIL FROM: <" + input("Mail from: ") + ">\r\n",
-                     "RCPT TO: <" + input("Mail to: ") + ">\r\n",
+                     f"MAIL FROM: <{sender}>\r\n",
+                     "RCPT TO: <{receiver}>\r\n",
                      "DATA\r\n",
-                     f"{msg}\r\n",
-                     ".\r\n",
+                     f"{msg}\r\n.\r\n",
                      "QUIT\r\n"]
 
     clientsocket = createSocket(mailserver, port)
@@ -96,7 +99,7 @@ def send_google_mail(mailserver, port, username, psw):
     # Prepare for TLS
     for i in range(2):
         clientsocket.send(smtp_commands[i].encode())
-        clientsocket.recv(2048)
+        print(clientsocket.recv(2048).decode())
 
     # TLS Connection
     ctx = ssl.create_default_context()
@@ -105,17 +108,23 @@ def send_google_mail(mailserver, port, username, psw):
     # Authenticate and send mail
     for i in range(2, len(smtp_commands)):
         clientsocket.send(smtp_commands[i].encode())
-        clientsocket.recv(2048)
+        print(clientsocket.recv(2048).decode())
 
 
 # Encapsulates the messages in headers
-def create_body(msg):
-    body = f'Subject: E-mail\n' \
-               f'Content-Type: text/plain; charset="UTF-8\n' \
-               f'Content-Transfer-Encoding: quoted-printable\n' \
-               f'\n' \
-               f'{msg}\n' \
-               f'\n'
+def create_body(msg, sender, receiver):
+    body = f'Subject: E-mail\r\n' \
+           f'MIME-Version: 1.0\r\n' \
+           f'Content-Type: multipart/mixed; boundary="===============0814515963129319972=="\r\n' \
+           f'From: {sender}\r\n' \
+           f'To: {receiver}\r\n' \
+           f'--===============0814515963129319972==\r\n' \
+           f'Content-Type: text/plain; charset="utf-8"\r\n' \
+           f'Content-Transfer-Encoding: quoted-printable\r\n' \
+           f'\r\n' \
+           f'{msg}\r\n' \
+           f'\r\n' \
+           f'--===============0814515963129319972==\r\n'
 
     return body
 
@@ -138,30 +147,15 @@ def base_64_to_string(bytes_to_conv):
 
 def image_attachment(body, image_path):
     image_base64 = base_64_to_string(image_to_base64(image_path))
-    msg = f'Content-Type: multipart/mixed; boundary="===============0814515963129319972=="\n' \
-          f'MIME-Version: 1.0\n'
-
-    # Text plain
-    msg = msg + f'--===============0814515963129319972==\n' \
-                f'Content-Type: text/plain; charset="utf-8"\n' \
-                f'Content-Transfer-Encoding: quoted-printable\n' \
-                f'\n' \
-                f'{body}\n' \
-                f'\n'
 
     # Image attachment
     if image_path != '':
-        msg = msg + '--===============0814515963129319972==\n' \
-                    'Content-Type: image/octet_stream\n' \
-                    'MIME-Version: 1.0\n' \
-                    'Content-Transfer-Encoding: base64\n' \
-                    f'Content-Disposition: attachment; filename="{image_path}"\n' \
-                    '\n' \
-                    f'{image_base64}==\n' \
-                    '\n' \
-
-    # End of message
-    msg = msg + f'--===============0814515963129319972==--'
+        msg = body + 'Content-Transfer-Encoding: base64\r\n' \
+                     f'Content-Disposition: attachment; filename="{os.path.basename(image_path)}"\r\n' \
+                     '\r\n' \
+                     f'{image_base64}==\r\n' \
+                     '\r\n' \
+                     f'--===============0814515963129319972==\r\n'
 
     return msg
 
