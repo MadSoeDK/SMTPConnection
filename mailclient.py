@@ -1,66 +1,69 @@
 from socket import *
 
-# msg = "\r\n I love computer networks!"
-endmsg = "\r\n.\r\n"
-CRLF = "\r\n"
-header = "Subject: Test\nContent-Type: text/html;\n"
-
 # Choose a mail server (e.g. Google mail server) and call it mailserver
-mailserver = 'localhost'
+bhsi_mailserver = 'smtp2.bhsi.xyz'
+bhsi_port = 2526
 
-# AF_INET refers to the address-family ipv4.
-# The SOCK_STREAM means connection-oriented TCP protocol.
-# ----------------------------------------------------------
-# Create socket called clientSocket and
-# establish a TCP connection with mailserver
-clientSocket = socket(AF_INET, SOCK_STREAM)
-clientSocket.connect((mailserver, 2525))
-
-recv = clientSocket.recv(1024)
-print(recv)
-
-def sendCommand(command, rc):
-    print(command)
-    # Write command to server
-    clientSocket.send((command + CRLF).encode())
-
-    # Read the response
-    response = clientSocket.recv(1024).decode()
-
-    print(response)
-
-    if int(response[:3]) != rc or response[:3] == 'DAT':
-        print(str(rc) + ' reply not received from server')
+google_mailserver = 'smtp.gmail.com'
+google_port = 587
 
 
-# Send HELO command and print server response.
-heloCommand = 'HELO localhost'  # EHLO for extended SMTP
-sendCommand(heloCommand, 250)
+def main():
+    while True:
+        option = input("Send mail? (y/n)")
+        if option == 'y':
+            send_mail()
+        else:
+            print("Quitting...")
+            break
 
-# Send MAIL FROM command and print server response.
-mailFrom = 'MAIL FROM:<'
-mailFrom += input("Enter sender: ")
-mailFrom += '>'
-sendCommand(mailFrom, 250)
 
-# Send RCPT TO command and print server response.
-rcptTo = 'RCPT TO:<'
-rcptTo += input("Enter recipient: ")
-rcptTo += '>'
-sendCommand(rcptTo, 250)
+def createSocket(mailserver, port):
+    # AF_INET refers to the address-family ipv4.
+    # The SOCK_STREAM means connection-oriented TCP protocol.
+    # ----------------------------------------------------------
+    # Create socket called clientSocket and
+    # establish a TCP connection with mailserver
+    clientSocket = socket(AF_INET, SOCK_STREAM)
+    clientSocket.connect((mailserver, port))
+    clientSocket.recv(2048)
 
-# Send DATA command and print server response.
-data = 'DATA'
-sendCommand(data, 354)
+    return clientSocket
 
-msg = input("Enter your message: ")
 
-clientSocket.send((header + (msg + CRLF) + endmsg).encode())
-# clientSocket.send(endmsg.encode())
+def send_mail():
+    msg = input("Message: ")
+    msg = create_make_body_mailable(msg)
 
-resp = clientSocket.recv(1024).decode()
-print(resp)
+    # SMTP protocol message
+    smtp_commands = ["EHLO localhost\r\n",
+                     "MAIL FROM: <" + input("Mail from:") + ">\r\n",
+                     "RCPT TO: <" + input("Mail to: ") + ">\r\n",
+                     "DATA\r\n",
+                     f"{msg}\r\n",
+                     ".\r\n",
+                     "QUIT\r\n"]
 
-# Send QUIT command and get server response.
-quit = 'QUIT'
-sendCommand(quit, 250)
+    clientsocket = createSocket(bhsi_mailserver, bhsi_port)
+
+    # Send commands
+    for i in range(len(smtp_commands)):
+        clientsocket.send(smtp_commands[i].encode())
+        if i == 4:
+            clientsocket.send(smtp_commands[i + 1].encode())
+        clientsocket.recv(2048)
+
+
+def create_make_body_mailable(body):
+    new_body = f'000000000000382db0057f0910d5"\n' \
+               f'Content-Type: text/plain; charset="UTF-8"\n' \
+               f'Content-Transfer-Encoding: quoted-printable\n' \
+               f'\n' \
+               f'{body}\n' \
+               f'\n' \
+               f'000000000000382db0057f0910d5'
+
+    return new_body
+
+
+main()
