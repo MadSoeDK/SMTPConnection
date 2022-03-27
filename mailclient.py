@@ -11,7 +11,7 @@ google_port = 587
 
 def main():
     while True:
-        option = input("Send mail? (y/n): ")
+        option = input("Send new mail? (y/n): ")
         if option == 'y':
             server = input("Gmail or Bhujip mailserver? (g/b): ")
             if server == "g":
