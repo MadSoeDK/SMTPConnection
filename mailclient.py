@@ -2,7 +2,7 @@ import base64
 import ssl
 import os
 from getpass import getpass
-from socket import *
+from socket import socket, AF_INET, SOCK_STREAM
 
 bhsi_mailserver = 'smtp2.bhsi.xyz'
 bhsi_port = 2526
